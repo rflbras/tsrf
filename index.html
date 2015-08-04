@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Tupper's Self-Referential Formula</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style src="https://necolas.github.io/normalize.css/3.0.2/normalize.css" type="text/css"></style>
+    <style type="text/css">
+      @import url(https://fonts.googleapis.com/css?family=Roboto);
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
+        padding: 10px;
+      }
+
+      .title {
+        font-size: 2.5em;
+        text-align: center;
+      }
+
+      .box {
+        min-height: 7.547px;
+      }
+
+      .gray {
+        background-color: #E9E9E9;
+      }
+
+      .dark_blue {
+        background-color: #2A457A;
+        color: #efefef;
+      }
+
+      .light_blue {
+        background-color: #099DD9;
+      }
+
+      .green {
+        background-color: #0C8542;
+      }
+
+      .lime {
+        background-color: rgb(179, 210, 52);
+      }
+
+      .seafoam {
+        background-color: rgb(77, 190, 161);
+      }
+
+      .red {
+        background-color: #EC1D3B;
+      }
+
+      .orange {
+        background-color: #F79420;
+      }
+
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .box {
+        width: 0.943396226%;
+      }
+
+      .input-box {
+        width: 100%
+      }
+
+      .input-box > textarea {
+        border: none;
+        width: inherit;
+        line-height: 1.5em;
+        font-family: monospace;
+        min-height: 150px;
+        font-size: 16px;
+      }
+
+      .button {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        border-radius: 0;
+        border-style: solid;
+        border-width: 0;
+        cursor: pointer;
+        font-weight: normal;
+        line-height: normal;
+        margin: 0 0 1.11111rem;
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        padding: 0.88889rem 1.77778rem 0.94444rem 1.77778rem;
+        font-size: 0.88889rem;
+        background-color: #008CBA;
+        border-color: #007095;
+        color: #FFFFFF;
+        transition: background-color 300ms ease-out;
+      }
+
+      button:hover, button:focus, .button:hover, .button:focus {
+        color: #FFFFFF;
+      }
+
+      button:hover, button:focus, .button:hover, .button:focus {
+        background-color: #007095;
+      }
+
+      button.secondary:hover, button.secondary:focus, .button.secondary:hover, .button.secondary:focus {
+        color: #333333;
+      }
+
+      button.secondary:hover, button.secondary:focus, .button.secondary:hover, .button.secondary:focus {
+        background-color: #b9b9b9;
+      }
+
+      button.secondary, .button.secondary {
+        background-color: #e7e7e7;
+        border-color: #b9b9b9;
+        color: #333333;
+      }
+
+      h1 {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="http://www.leemon.com/crypto/BigInt.js"></script>
+
+    <script>
+    var colors = ['dark_blue', 'light_blue', 'green', 'lime', 'seafoam', 'red', 'orange' ];
+    var k0 = int2bigInt(0, 16, 0);
+    var k1 = int2bigInt(1, 16, 0);
+    var k2 = int2bigInt(2, 16, 0);
+    var k4 = mult(k2, k2);
+    var k17 = int2bigInt(17, 16, 0);
+    var k_17 = sub(k0, k17);
+
+    function shuffle(array) {
+      var m = array.length, t, i;
+
+      // While there remain elements to shuffle…
+      while (m) {
+
+        // Pick a remaining element…
+        i = Math.floor(Math.random() * m--);
+
+        // And swap it with the current element.
+        t = array[m];
+        array[m] = array[i];
+        array[i] = t;
+      }
+
+      return array;
+    }
+
+    function tupper(x, y) {
+      // floor(y/17)
+      var v = dup(y);
+      divInt_(v, 17);
+
+      // negative exponent of 2, rewritten as a bitwise right shift
+      var e = mult(x, k17);
+      add_(e, mod(y, k17));
+
+      var sh = parseInt(bigInt2str(e, 10));
+      if (sh > 0) {
+        rightShift_(v, sh - 1);
+        // final modulo to recover pixel bit.  <br/>
+        mod_(v, k4);
+        return greater(v, k1);
+      } else {
+        // final modulo to recover pixel bit.  <br/>
+        mod_(v, k2);
+        return greater(v, k0);
+      }
+    }
+
+    function render() {
+      var n = str2bigInt($('#n').val().trim(), 10);
+      var color = shuffle(colors)[0];
+
+      for (var y = 0; y <= 16; y++) {
+        for (var x = 105; x >= 0; x--) {
+          var style = 'box';
+          var bigX = int2bigInt(x, 16, 0);
+          var bigY = addInt(n, y);
+          var bit = 0;
+          var $element = $('#' + x + '-' + y);
+
+          if (tupper(bigX, bigY) == 1) {
+            bit = 1;
+            style += ' ' + color;
+          } else if ((y % 2 == 0) == (x % 2 == 0)) {
+            style += ' gray';
+          }
+
+          $element.attr('class', style).data('bit', bit);
+        };
+      };
+    }
+
+    function clearPlotArea() {
+      var $plot_area = $('#plot-area');
+
+      $plot_area.empty();
+
+      for (var y = 0; y <= 16; y++) {
+        for (var x = 105; x >= 0; x--) {
+          var style = 'box';
+
+          if ((y % 2 == 0) == (x % 2 == 0)) {
+            style += ' gray';
+          }
+
+          $plot_area.append('<div id="' + x + '-' + y + '" class="' + style + '"></div>');
+        };
+      };
+    }
+
+    $(function() {
+      clearPlotArea();
+    });
+
+    </script>
+  </head>
+  <body>
+    <h1>Tupper's Self-Referential Formula</h1>
+    <div class="container">
+      <div class="input-box">
+        <textarea name="n" id="n">960939379918958884971672962127852754715004339660129306651505519271702802395266424689642842174350718121267153782770623355993237280874144307891325963941337723487857735749823926629715517173716995165232890538221612403238855866184013235585136048828693337902491454229288667081096184496091705183454067827731551705405381627380967602565625016981482083418783163849115590225610003652351370343874461848378737238198224849863465033159410054974700593138339226497249461751545728366702369745461014655997933798537483143786841806593422227898388722980000748404719</textarea>
+        <button class="button" onclick="render()">Render</button>
+        <button class="button secondary" onclick="clearPlotArea()">Clear</button>
+      </div>
+    </div>
+    <div class="container" id="plot-area"></div>
+  </body>
+</html>
